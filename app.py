@@ -115,7 +115,7 @@ col_q, col_btn = st.columns([3, 1])
 with col_q:
     st.text_input(
         "اكتب اسم الصنف",
-        placeholder="مثال: موبايل سامسونج A14",
+        placeholder="مثال: لمبة 100",
         key="q",
         on_change=_on_query_change,
     )
