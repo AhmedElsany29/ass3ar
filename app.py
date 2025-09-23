@@ -15,8 +15,8 @@ WORKSHEET_NAME = "المحل"                         # ← اسم الورقة 
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={WORKSHEET_NAME}"
 
 # =================== إعداد الصفحة ===================
-st.set_page_config(page_title="سعر الصنف", page_icon="💸", layout="centered")
-st.title("💸 سعر الصنف")
+st.set_page_config(page_title="ابو احمد - لاادوات الكهربائية", page_icon="🥷", layout="centered")
+st.title("🥷 سعر الصنف")
 
 # =================== أدوات عربية ===================
 _ARABIC_DIACRITICS = re.compile(r"[\u0610-\u061A\u064B-\u065F\u06D6-\u06ED]")
@@ -106,7 +106,7 @@ if "trigger_search" not in st.session_state:
     st.session_state["trigger_search"] = False
 
 # =================== UI: مدخلات ===================
-cutoff = st.slider("درجة المطابقة التقريبية", 0.0, 1.0, 0.6, 0.05)
+cutoff = st.slider("درجة المطابقة التقريبية", 0.0, 1.0, 0.3, 0.05)
 
 def _on_query_change():
     st.session_state["trigger_search"] = True
