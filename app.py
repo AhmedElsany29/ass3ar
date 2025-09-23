@@ -16,7 +16,7 @@ CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:cs
 
 # =================== إعداد الصفحة ===================
 st.set_page_config(page_title="ابو احمد - لاادوات الكهربائية", page_icon="🥷", layout="centered")
-st.title("🥷 سعر الصنف")
+st.title("🥷 ابو احمد - لاادوات الكهربائية")
 
 # =================== أدوات عربية ===================
 _ARABIC_DIACRITICS = re.compile(r"[\u0610-\u061A\u064B-\u065F\u06D6-\u06ED]")
