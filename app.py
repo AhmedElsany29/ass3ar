@@ -15,7 +15,7 @@ WORKSHEET_NAME = "المحل"                         # ← اسم الورقة 
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={WORKSHEET_NAME}"
 
 # =================== إعداد الصفحة ===================
-st.set_page_config(page_title="ابو احمد - لاادوات الكهربائية", page_icon="🥷", layout="centered")
+st.set_page_config(page_title="ابو احمد - للادوات الكهربائية", page_icon="🥷", layout="centered")
 st.title("🥷 ابو احمد - لاادوات الكهربائية")
 
 # =================== أدوات عربية ===================
