@@ -146,7 +146,7 @@ if do_search:
         # -------- اقتراحات + أسعارها (تظهر فورًا) --------
         if suggestions:
             st.caption("يمكن قصدت (مع السعر):")
-            cols = st.columns(min(3, len(suggestions)))
+            cols = st.columns(min(3, 10))
             for i, s in enumerate(suggestions):
                 sp = get_price_by_exact_name(s, names, prices)
                 label = f"{s} — السعر: {sp or 'غير مسجل'}"
