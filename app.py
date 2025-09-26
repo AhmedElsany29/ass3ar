@@ -106,7 +106,7 @@ if "trigger_search" not in st.session_state:
     st.session_state["trigger_search"] = False
 
 # =================== UI: مدخلات ===================
-cutoff = st.slider("درجة المطابقة التقريبية", 0.0, 1.0, 0.3, 0.05)
+cutoff = st.slider("درجة المطابقة التقريبية", 0.05)
 
 def _on_query_change():
     st.session_state["trigger_search"] = True
