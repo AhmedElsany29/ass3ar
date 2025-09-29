@@ -188,11 +188,11 @@ if do_search:
                     if result['match_type'] == 'exact':
                         st.subheader("🎯 تطابق مباشر:")
                     elif result['match_type'] == 'word_match':
-                        st.subheader("✅ يحتوي على الكلمة:")
+                        st.subheader("✅:")
                     elif result['match_type'] == 'partial_match':
                         st.subheader("📝 يحتوي على جزء من الكلمة:")
                     elif result['match_type'] == 'fuzzy_match':
-                        st.subheader("🔍 مشابه:")
+                        st.subheader("🔍:")
                 
                 # عرض المنتج
                 price_text = result['price'] if result['price'] else "غير مسجل"
@@ -208,10 +208,10 @@ if do_search:
                 if i < len(results) - 1:
                     st.divider()
 
-# =================== إحصائيات ===================
-if names:
-    with st.expander(f"📊 إحصائيات الشيت ({len(names)} منتج)"):
-        st.write(f"إجمالي المنتجات: {len(names)}")
-        priced_count = sum(1 for p in prices if p.strip())
-        st.write(f"المنتجات بأسعار: {priced_count}")
-        st.write(f"المنتجات بدون أسعار: {len(names) - priced_count}")
+# # =================== إحصائيات ===================
+# if names:
+#     with st.expander(f"📊 إحصائيات الشيت ({len(names)} منتج)"):
+#         st.write(f"إجمالي المنتجات: {len(names)}")
+#         priced_count = sum(1 for p in prices if p.strip())
+#         st.write(f"المنتجات بأسعار: {priced_count}")
+#         st.write(f"المنتجات بدون أسعار: {len(names) - priced_count}")
