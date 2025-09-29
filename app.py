@@ -57,30 +57,67 @@ def load_products_from_csv(url: str) -> Tuple[List[str], List[str], List[str]]:
             prices.append(price)
     return names, names_norm, prices
 
-def lookup_price(query: str, names, names_norm, prices, cutoff=0.6):
-    """يرجع (أفضل_تطابق_بالاسم_الأصلي, السعر) + قائمة اقتراحات أخرى."""
+def search_products(query: str, names, names_norm, prices, cutoff=0.6):
+    """يبحث عن كل المنتجات المشابهة ويرجعها مرتبة حسب الأولوية."""
     q = normalize_ar(query)
     if not q:
-        return None, []
+        return []
 
-    # تطابق مباشر
-    if q in names_norm:
-        i = names_norm.index(q)
-        return (names[i], prices[i] if i < len(prices) else ""), []
-
-    # أقرب تقريبي
-    matches = get_close_matches(q, names_norm, n=5, cutoff=cutoff)
-    if matches:
-        i0 = names_norm.index(matches[0])
-        sugg = [names[names_norm.index(m)] for m in matches[1:]]
-        return (names[i0], prices[i0] if i0 < len(prices) else ""), sugg
-
-    # contains
+    results = []
+    
+    # 1. تطابق مباشر أولاً
     for i, n in enumerate(names_norm):
-        if q and q in n:
-            return (names[i], prices[i] if i < len(prices) else ""), []
-
-    return None, []
+        if q == n:
+            results.append({
+                'name': names[i],
+                'price': prices[i] if i < len(prices) else "",
+                'match_type': 'exact',
+                'priority': 1
+            })
+    
+    # 2. يحتوي على الكلمة كاملة
+    for i, n in enumerate(names_norm):
+        if q != n and q in n:
+            # تأكد إن الكلمة مش جزء من كلمة أكبر
+            if re.search(r'\b' + re.escape(q) + r'\b', n):
+                results.append({
+                    'name': names[i],
+                    'price': prices[i] if i < len(prices) else "",
+                    'match_type': 'word_match',
+                    'priority': 2
+                })
+    
+    # 3. يحتوي على الكلمة كجزء من كلمة
+    for i, n in enumerate(names_norm):
+        if q != n and q in n:
+            # تجنب التكرار مع النتائج اللي قبل كده
+            already_added = any(r['name'] == names[i] for r in results)
+            if not already_added:
+                results.append({
+                    'name': names[i],
+                    'price': prices[i] if i < len(prices) else "",
+                    'match_type': 'partial_match',
+                    'priority': 3
+                })
+    
+    # 4. تطابق تقريبي
+    matches = get_close_matches(q, names_norm, n=10, cutoff=cutoff)
+    for match in matches:
+        i = names_norm.index(match)
+        # تجنب التكرار
+        already_added = any(r['name'] == names[i] for r in results)
+        if not already_added:
+            results.append({
+                'name': names[i],
+                'price': prices[i] if i < len(prices) else "",
+                'match_type': 'fuzzy_match',
+                'priority': 4
+            })
+    
+    # ترتيب النتائج حسب الأولوية
+    results.sort(key=lambda x: x['priority'])
+    
+    return results
 
 def get_price_by_exact_name(name: str, names, prices) -> str:
     try:
@@ -106,7 +143,7 @@ if "trigger_search" not in st.session_state:
     st.session_state["trigger_search"] = False
 
 # =================== UI: مدخلات ===================
-cutoff = st.slider("درجة المطابقة التقريبية", 0.05)
+cutoff = st.slider("درجة المطابقة التقريبية", 0.1, 1.0, 0.5, 0.05)
 
 def _on_query_change():
     st.session_state["trigger_search"] = True
@@ -114,8 +151,8 @@ def _on_query_change():
 col_q, col_btn = st.columns([3, 1])
 with col_q:
     st.text_input(
-        "اكتب اسم الصنف",
-        placeholder="مثال: لمبة 100",
+        "اكتب اسم الصنف أو جزء منه",
+        placeholder="مثال: مشترك، لمبة، كابل",
         key="q",
         on_change=_on_query_change,
     )
@@ -130,31 +167,51 @@ if do_search:
 
     q_val = st.session_state.get("q", "")
     if not q_val.strip():
-        st.info("اكتب اسم الصنف ثم اضغط ابحث.")
+        st.info("اكتب اسم الصنف أو جزء منه ثم اضغط ابحث.")
     elif not names:
         st.error("الشيت لا يحتوي بيانات.")
     else:
-        best, suggestions = lookup_price(q_val, names, names_norm, prices, cutoff=cutoff)
+        results = search_products(q_val, names, names_norm, prices, cutoff=cutoff)
 
-        # نتيجة أفضل تطابق
-        if best is None:
-            st.error("الصنف غير موجود.")
+        if not results:
+            st.error("لم يتم العثور على أي منتجات تحتوي على هذا النص.")
         else:
-            pname, price = best
-            st.success(f"**{pname}** — السعر: **{price or 'غير مسجل'}**")
+            st.success(f"تم العثور على {len(results)} منتج:")
+            
+            # عرض النتائج في مجموعات حسب نوع التطابق
+            current_priority = None
+            
+            for i, result in enumerate(results):
+                # عرض عنوان المجموعة
+                if result['priority'] != current_priority:
+                    current_priority = result['priority']
+                    if result['match_type'] == 'exact':
+                        st.subheader("🎯 تطابق مباشر:")
+                    elif result['match_type'] == 'word_match':
+                        st.subheader("✅ يحتوي على الكلمة:")
+                    elif result['match_type'] == 'partial_match':
+                        st.subheader("📝 يحتوي على جزء من الكلمة:")
+                    elif result['match_type'] == 'fuzzy_match':
+                        st.subheader("🔍 مشابه:")
+                
+                # عرض المنتج
+                price_text = result['price'] if result['price'] else "غير مسجل"
+                
+                # استخدام أعمدة لعرض أفضل
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.write(f"**{result['name']}**")
+                with col2:
+                    st.write(f"💰 {price_text}")
+                
+                # خط فاصل بين المنتجات
+                if i < len(results) - 1:
+                    st.divider()
 
-        # -------- اقتراحات + أسعارها (تظهر فورًا) --------
-        if suggestions:
-            st.caption("يمكن قصدت (مع السعر):")
-            cols = st.columns(min(3, 10))
-            for i, s in enumerate(suggestions):
-                sp = get_price_by_exact_name(s, names, prices)
-                label = f"{s} — السعر: {sp or 'غير مسجل'}"
-                # زر اختياري: يملّي البحث ويعيد النتيجة الأساسية
-                if cols[i % len(cols)].button(label, key=f"sugg_{i}"):
-                    st.session_state["q"] = s
-                    st.session_state["trigger_search"] = True
-                    try:
-                        st.experimental_rerun()
-                    except Exception:
-                        st.rerun()
+# =================== إحصائيات ===================
+if names:
+    with st.expander(f"📊 إحصائيات الشيت ({len(names)} منتج)"):
+        st.write(f"إجمالي المنتجات: {len(names)}")
+        priced_count = sum(1 for p in prices if p.strip())
+        st.write(f"المنتجات بأسعار: {priced_count}")
+        st.write(f"المنتجات بدون أسعار: {len(names) - priced_count}")
