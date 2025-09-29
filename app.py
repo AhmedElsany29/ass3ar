@@ -212,6 +212,6 @@ if do_search:
 if names:
     with st.expander(f"📊 إحصائيات  ({len(names)} منتج)"):
         # st.write(f"إجمالي المنتجات: {len(names)}")
-        # priced_count = sum(1 for p in prices if p.strip())
+        priced_count = sum(1 for p in prices if p.strip())
         # st.write(f"المنتجات بأسعار: {priced_count}")
         st.write(f"المنتجات بدون أسعار: {len(names) - priced_count}")
